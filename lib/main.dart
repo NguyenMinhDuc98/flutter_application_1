@@ -1,5 +1,6 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/api.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -105,7 +106,20 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class GeneratorPage extends StatelessWidget {
+class GeneratorPage extends StatefulWidget {
+  @override
+  State<GeneratorPage> createState() => _GeneratorPageState();
+}
+
+class _GeneratorPageState extends State<GeneratorPage> {
+  late Future<Album> tempObj;
+
+  @override
+  void initState() {
+    super.initState();
+    tempObj = fetchAlbum();
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -141,6 +155,18 @@ class GeneratorPage extends StatelessWidget {
                 },
                 child: Text('Next'),
               ),
+              FutureBuilder<Album>(
+                  future: tempObj,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else {
+                      if (snapshot.hasData) {
+                        return buildDataWidget(context, snapshot);
+                      }
+                    }
+                    return Column();
+                  })
             ],
           ),
         ],
@@ -203,3 +229,36 @@ class BigCard extends StatelessWidget {
     );
   }
 }
+
+class Album {
+  final int userId;
+  final int id;
+  final String title;
+
+  const Album({
+    required this.userId,
+    required this.id,
+    required this.title,
+  });
+
+  factory Album.fromJson(Map<String, dynamic> json) {
+    return Album(
+      userId: json['userId'],
+      id: json['id'],
+      title: json['title'],
+    );
+  }
+}
+
+Widget buildDataWidget(context, snapshot) => Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(snapshot.data.title.toString())),
+        Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(snapshot.data.userId.toString())),
+      ],
+    );
